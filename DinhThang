@@ -1,0 +1,53 @@
+local P=game:GetService("Players")
+local LP=P.LocalPlayer
+
+local function ESP(plr,char)
+	if plr==LP or not char then return end
+	
+	local head=char:WaitForChild("Head",5)
+	if not head then return end
+	
+	local h=char:FindFirstChild("TeamHighlight") or Instance.new("Highlight",char)
+	h.Name="TeamHighlight"
+	h.FillTransparency=1
+	h.OutlineTransparency=0
+	
+	local gui=head:FindFirstChild("TeamESP") or Instance.new("BillboardGui",head)
+	gui.Name="TeamESP"
+	gui.Size=UDim2.new(0,120,0,25)
+	gui.StudsOffset=Vector3.new(0,2,0)
+	gui.AlwaysOnTop=true
+	
+	local lbl=gui:FindFirstChild("NameLabel") or Instance.new("TextLabel",gui)
+	lbl.Name="NameLabel"
+	lbl.Size=UDim2.new(1,0,1,0)
+	lbl.BackgroundTransparency=1
+	lbl.Font=Enum.Font.SourceSansBold
+	lbl.TextScaled=false
+	lbl.TextSize=10
+	lbl.TextStrokeTransparency=0
+	lbl.TextStrokeColor3=Color3.new(0,0,0)
+	lbl.Text=plr.Name
+	
+	local c=plr.Team and plr.Team.TeamColor.Color or Color3.new(1,1,1)
+	h.OutlineColor=c
+	lbl.TextColor3=c
+end
+
+local function Setup(plr)
+	if plr==LP then return end
+	
+	plr.CharacterAdded:Connect(function(c)
+		task.wait(1)
+		ESP(plr,c)
+	end)
+	
+	plr:GetPropertyChangedSignal("Team"):Connect(function()
+		if plr.Character then ESP(plr,plr.Character) end
+	end)
+	
+	if plr.Character then ESP(plr,plr.Character) end
+end
+
+for _,v in pairs(P:GetPlayers()) do Setup(v) end
+P.PlayerAdded:Connect(Setup)
