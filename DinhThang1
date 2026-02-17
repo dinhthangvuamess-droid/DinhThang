@@ -1,0 +1,87 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local function applyESP(player, character)
+    if not character then return end
+    if player == LocalPlayer then return end
+    
+    local head = character:WaitForChild("Head",5)
+    if not head then return end
+    
+    -- ===== Highlight =====
+    local highlight = character:FindFirstChild("TeamHighlight")
+    if not highlight then
+        highlight = Instance.new("Highlight")
+        highlight.Name = "TeamHighlight"
+        highlight.Parent = character
+        highlight.FillTransparency = 1
+        highlight.OutlineTransparency = 0
+    end
+    
+    -- ===== Tạo Name ESP =====
+    local gui = head:FindFirstChild("TeamESP")
+    if not gui then
+        gui = Instance.new("BillboardGui")
+        gui.Name = "TeamESP"
+        gui.Size = UDim2.new(0,120,0,25)
+        gui.StudsOffset = Vector3.new(0,2,0)
+        gui.AlwaysOnTop = true
+        gui.Parent = head
+        
+        local label = Instance.new("TextLabel")
+        label.Name = "NameLabel"
+        label.Size = UDim2.new(1,0,1,0)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.SourceSansBold
+        label.TextScaled = false
+        label.TextSize = 10
+        label.TextStrokeTransparency = 0
+        label.TextStrokeColor3 = Color3.new(0,0,0)
+        label.Parent = gui
+    end
+    
+    local label = gui:FindFirstChild("NameLabel")
+    label.Text = player.Name
+    
+    -- ===== Update màu team =====
+    if player.Team then
+        local color = player.Team.TeamColor.Color
+        highlight.OutlineColor = color
+        label.TextColor3 = color
+    else
+        highlight.OutlineColor = Color3.new(1,1,1)
+        label.TextColor3 = Color3.new(1,1,1)
+    end
+end
+
+
+local function setupPlayer(player)
+    if player == LocalPlayer then return end
+    
+    -- Khi spawn
+    player.CharacterAdded:Connect(function(character)
+        task.wait(1)
+        applyESP(player, character)
+    end)
+    
+    -- Khi đổi team
+    player:GetPropertyChangedSignal("Team"):Connect(function()
+        if player.Character then
+            applyESP(player, player.Character)
+        end
+    end)
+    
+    -- Nếu player đã spawn sẵn
+    if player.Character then
+        applyESP(player, player.Character)
+    end
+end
+
+
+-- Player hiện tại
+for _,player in pairs(Players:GetPlayers()) do
+    setupPlayer(player)
+end
+
+-- Player mới vào
+Players.PlayerAdded:Connect(setupPlayer)
